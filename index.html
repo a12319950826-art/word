@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>智能词汇猎手 Pro Max</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 95vh;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: clamp(1.5em, 5vw, 2.5em);
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .upload-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: clamp(1em, 3vw, 1.3em);
+        }
+
+        .upload-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(0.9em, 2vw, 1em);
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .upload-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .upload-btn.secondary {
+            background: #28a745;
+        }
+
+        .upload-btn.secondary:hover {
+            background: #218838;
+        }
+
+        .file-info {
+            flex: 1;
+            color: #666;
+            font-size: clamp(0.8em, 2vw, 0.9em);
+            min-width: 200px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 50px;
+            border: none;
+            border-radius: 15px;
+            font-size: clamp(1em, 3vw, 1.3em);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+            margin: 30px auto;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .start-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card.stubborn {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .stat-value {
+            font-size: clamp(1.5em, 4vw, 2em);
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: clamp(0.8em, 2vw, 0.9em);
+            opacity: 0.9;
+        }
+
+        .word-display {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .word {
+            font-size: clamp(2em, 8vw, 3.5em);
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-transform: lowercase;
+        }
+
+        .phonetic {
+            font-size: clamp(1em, 3vw, 1.2em);
+            color: #666;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        
+        .translation-hidden {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: transparent;
+            user-select: none;
+            padding: 10px 30px;
+            border-radius: 10px;
+            display: inline-block;
+            cursor: help;
+            position: relative;
+        }
+        
+        .translation-hidden::before {
+            content: '🔒 点击按钮查看答案';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+        
+        .translation-visible {
+            font-size: 1.3em;
+            color: #667eea;
+            font-weight: bold;
+            font-style: normal;
+            animation: fadeIn 0.5s;
+        }
+
+        .pronunciation-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-size: clamp(0.9em, 2.5vw, 1.1em);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pronunciation-btn:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .undo-btn {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 10px;
+            font-size: clamp(0.9em, 2vw, 1em);
+            cursor: pointer;
+            transition: all 0.3s;
+            opacity: 0.5;
+        }
+        
+        .undo-btn.enabled {
+            opacity: 1;
+            box-shadow: 0 3px 15px rgba(255, 193, 7, 0.4);
+        }
+        
+        .undo-btn.enabled:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 193, 7, 0.6);
+            background: #ffb300;
+        }
+        
+        .undo-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.3;
+        }
+
+        .option-btn {
+            background: white;
+            border: 3px solid #ddd;
+            padding: 30px 20px;
+            border-radius: 15px;
+            font-size: clamp(1.1em, 3vw, 1.5em);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .option-btn.correct {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+            animation: correctPulse 0.5s;
+        }
+
+        .option-btn.wrong {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+            animation: wrongShake 0.5s;
+        }
+
+        .option-btn.show-correct {
+            background: #ffc107;
+            color: #333;
+            border-color: #ffc107;
+            font-weight: bold;
+            animation: highlightCorrect 1s;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes highlightCorrect {
+            0%, 100% { box-shadow: 0 0 20px #ffc107; }
+            50% { box-shadow: 0 0 40px #ffc107; }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: clamp(0.8em, 2vw, 0.9em);
+        }
+
+        .timer {
+            text-align: center;
+            font-size: clamp(1em, 3vw, 1.2em);
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .timer.warning {
+            color: #ffc107;
+        }
+
+        .timer.danger {
+            color: #dc3545;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .control-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(0.9em, 2vw, 1em);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .control-btn.back {
+            background: #6c757d;
+            color: white;
+        }
+
+        .control-btn.export {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .control-btn.stubborn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .control-btn.reset {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .control-btn.progress {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: clamp(0.9em, 2vw, 1em);
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                border-radius: 15px;
+            }
+
+            /* 认识/不认识按钮保持横向排列 */
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+            
+            .option-btn {
+                padding: 25px 15px;
+                min-height: 90px;
+                font-size: clamp(1em, 4vw, 1.3em);
+            }
+
+            .stats-panel {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+            
+            .stat-card {
+                padding: 12px;
+            }
+
+            .upload-area {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .file-info {
+                min-width: 100%;
+            }
+            
+            /* 控制按钮优化 */
+            .control-buttons {
+                gap: 8px;
+            }
+            
+            .control-btn {
+                padding: 10px 15px;
+                font-size: clamp(0.85em, 2vw, 0.95em);
+            }
+            
+            .undo-btn {
+                padding: 10px 20px;
+                font-size: clamp(0.85em, 2vw, 0.95em);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                margin-bottom: 20px;
+                font-size: 1.5em;
+            }
+
+            .upload-section {
+                padding: 15px;
+            }
+            
+            /* 认识/不认识按钮在超小屏幕上 */
+            .option-btn {
+                padding: 20px 10px;
+                min-height: 80px;
+                font-size: 1.1em;
+            }
+            
+            /* 控制按钮在超小屏幕上 */
+            .control-buttons {
+                gap: 6px;
+            }
+            
+            .control-btn {
+                padding: 8px 12px;
+                font-size: 0.8em;
+                white-space: nowrap;
+            }
+            
+            .undo-btn {
+                padding: 8px 15px;
+                font-size: 0.85em;
+                width: 100%;
+                margin-bottom: 8px;
+            }
+            
+            /* 统计卡片更紧凑 */
+            .stat-card {
+                padding: 10px;
+            }
+            
+            .stat-value {
+                font-size: 1.5em;
+            }
+            
+            .stat-label {
+                font-size: 0.75em;
+            }
+        }
+        
+        /* 横屏手机优化 */
+        @media (max-width: 768px) and (max-height: 500px) {
+            .container {
+                padding: 8px;
+            }
+            
+            h1 {
+                margin-bottom: 10px;
+                font-size: 1.3em;
+            }
+            
+            .stats-panel {
+                margin-bottom: 10px;
+            }
+            
+            .word {
+                font-size: 2em;
+            }
+            
+            .option-btn {
+                padding: 15px 10px;
+                min-height: 60px;
+            }
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .format-hint {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: clamp(0.8em, 2vw, 0.9em);
+            color: #333;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导入页面 -->
+        <div id="importPage" class="page active">
+            <h1>🎯 智能词汇猎手 Pro Max</h1>
+
+            <div class="upload-section">
+                <h3>📚 第一步：导入词典文件</h3>
+                <div class="upload-area">
+                    <input type="file" id="dictInput" accept=".csv,.txt">
+                    <button class="upload-btn secondary" onclick="document.getElementById('dictInput').click()">
+                        📖 选择词典文件
+                    </button>
+                    <div class="file-info" id="dictInfo">未加载词典</div>
+                </div>
+                <div class="format-hint">
+                    <strong>📖 支持ECDICT格式</strong><br>
+                    自动识别并处理特殊字符、换行符等问题<br>
+                    <strong>💾 首次导入后会自动保存，下次打开无需重新导入</strong>
+                </div>
+            </div>
+
+            <div class="upload-section">
+                <h3>📝 第二步：上传单词列表</h3>
+                <div class="upload-area">
+                    <input type="file" id="wordInput" accept=".txt">
+                    <button class="upload-btn" onclick="document.getElementById('wordInput').click()">
+                        📄 选择单词文件
+                    </button>
+                    <div class="file-info" id="wordInfo">未选择文件</div>
+                </div>
+                <div class="format-hint">
+                    <strong>📝 单词文件格式：</strong>每行一个单词<br>
+                    <strong>💾 首次导入后会自动保存，下次打开无需重新导入</strong>
+                </div>
+            </div>
+
+            <div class="upload-section">
+                <h3>💾 导入学习进度（可选）</h3>
+                <div class="upload-area">
+                    <input type="file" id="progressInput" accept=".json">
+                    <button class="upload-btn progress" onclick="document.getElementById('progressInput').click()">
+                        📥 导入进度文件
+                    </button>
+                    <div class="file-info" id="progressInfo">未导入进度</div>
+                </div>
+                <div class="format-hint">
+                    <strong>💡 提示：</strong>导入之前导出的进度文件，可跨设备继续学习<br>
+                    <strong>🔄 学习进度会自动保存到浏览器，刷新页面后自动恢复</strong>
+                </div>
+            </div>
+
+            <div id="importMessage"></div>
+            
+            <div class="format-hint" style="margin-top: 20px; background: #f0f0f0; border-left-color: #6c757d;">
+                <strong>🔍 缓存状态：</strong>
+                <div id="storageStatus">检查中...</div>
+            </div>
+
+            <button class="start-btn" id="startBtn" disabled onclick="startLearning()">
+                🚀 开始学习
+            </button>
+        </div>
+        <!-- 学习页面 -->
+        <div id="learningPage" class="page">
+            <h1>📖 词汇学习</h1>
+
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalWords">0</div>
+                    <div class="stat-label">总词汇</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="todayDue">0</div>
+                    <div class="stat-label">今日待学</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="masteredWords">0</div>
+                    <div class="stat-label">已掌握</div>
+                </div>
+                <div class="stat-card stubborn">
+                    <div class="stat-value" id="stubbornWords">0</div>
+                    <div class="stat-label">顽固词</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="accuracy">0%</div>
+                    <div class="stat-label">正确率</div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+
+            <div class="timer" id="timer">⏱️ 思考时间: 0.0秒</div>
+
+            <div class="word-display">
+                <div class="word" id="wordDisplay">loading...</div>
+                <div class="phonetic" id="phoneticDisplay"></div>
+                <button class="pronunciation-btn" onclick="pronounceWord()">
+                    🔊 发音
+                </button>
+            </div>
+
+            <div class="options-grid" id="optionsGrid"></div>
+
+            <div id="learningMessage"></div>
+
+            <div class="control-buttons">
+                <button class="undo-btn" id="undoBtn" onclick="undoLastAnswer()" disabled>
+                    ↩️ 撤回上一个
+                </button>
+                <button class="control-btn back" onclick="backToImport()">
+                    ⬅️ 返回
+                </button>
+                <button class="control-btn export" onclick="exportUnmastered()">
+                    📥 导出未掌握词
+                </button>
+                <button class="control-btn stubborn" onclick="exportStubborn()">
+                    🔥 导出顽固词
+                </button>
+                <button class="control-btn stubborn" onclick="toggleStubbornMode()">
+                    🔥 <span id="stubbornModeText">进入顽固词模式</span>
+                </button>
+                <button class="control-btn progress" onclick="exportProgress()">
+                    💾 导出学习进度
+                </button>
+                <button class="control-btn reset" onclick="resetProgress()">
+                    🔄 重置进度
+                </button>
+                <button class="control-btn reset" onclick="clearAllData()">
+                    🗑️ 清除所有数据
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // ==================== 全局变量 ====================
+        let dictionary = new Map();
+        let wordList = [];
+        let currentWord = null;
+        let correctAnswers = 0;
+        let totalAnswered = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let correctAnswer = '';
+        let isInStubbornMode = false; // 新增：是否在顽固词模式
+        let lastWord = null; // 记录上一个单词的完整状态（用于撤回）
+        let canUndo = false; // 是否可以撤回
+
+        // ==================== CSV解析器 ====================
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                const nextChar = line[i + 1];
+                
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        // ==================== 消息显示 ====================
+        function showMessage(elementId, message, type, duration = 5000) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="message ${type}">${message}</div>`;
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    element.innerHTML = '';
+                }, duration);
+            }
+        }
+
+        // ==================== 文件下载 ====================
+        function downloadFile(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        // ==================== 词典加载 ====================
+        document.getElementById('dictInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showMessage('importMessage', '正在加载词典...', 'info');
+            
+            try {
+                const text = await file.text();
+                await parseDictionary(text);
+                
+                // 注意：不立即保存完整词典（太大了）
+                // 等单词列表加载后，只保存需要的词条
+                
+                document.getElementById('dictInfo').textContent = 
+                    `✅ 已加载 ${dictionary.size} 个词条`;
+                showMessage('importMessage', `词典加载成功！共 ${dictionary.size} 个词条<br>💡 提示：保存时只会缓存您单词列表中的词条`, 'success');
+                updateStorageStatus(); // 更新缓存状态显示
+                checkStartButton();
+            } catch (error) {
+                showMessage('importMessage', '词典加载失败：' + error.message, 'error');
+                console.error(error);
+            }
+        });
+        
+        // 保存词典到localStorage（优化版：只保存需要的词条）
+        function saveDictionaryToStorage() {
+            try {
+                // 如果没有单词列表，暂不保存词典（等单词列表加载后一起保存）
+                if (wordList.length === 0) {
+                    console.log('等待单词列表加载后再保存词典');
+                    return;
+                }
+                
+                // 只保存单词列表中需要的词典条目
+                const neededDict = {};
+                for (const wordObj of wordList) {
+                    const word = wordObj.word;
+                    const entry = dictionary.get(word);
+                    if (entry) {
+                        neededDict[word] = entry;
+                    }
+                }
+                
+                const dictData = {
+                    version: '2.0',
+                    timestamp: new Date().toISOString(),
+                    entries: neededDict
+                };
+                
+                localStorage.setItem('vocabHunterDict', JSON.stringify(dictData));
+                console.log(`词典已保存到本地存储（优化版，仅保存 ${Object.keys(neededDict).length} 个词条）`);
+            } catch (error) {
+                console.error('保存词典失败:', error);
+                if (error.name === 'QuotaExceededError') {
+                    alert('⚠️ 浏览器存储空间不足！\n\n建议使用"导出进度"功能手动保存学习进度。');
+                }
+            }
+        }
+        
+        // 从localStorage加载词典
+        function loadDictionaryFromStorage() {
+            try {
+                const saved = localStorage.getItem('vocabHunterDict');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    
+                    // 兼容旧格式（数组）和新格式（对象）
+                    if (Array.isArray(data)) {
+                        // 旧格式：直接是Map的数组形式
+                        dictionary = new Map(data);
+                    } else if (data.version === '2.0' && data.entries) {
+                        // 新格式：优化版，只包含需要的词条
+                        dictionary.clear();
+                        for (const [word, entry] of Object.entries(data.entries)) {
+                            dictionary.set(word, entry);
+                        }
+                    }
+                    
+                    if (dictionary.size > 0) {
+                        document.getElementById('dictInfo').textContent = 
+                            `✅ 已加载 ${dictionary.size} 个词条（缓存）`;
+                        checkStartButton();
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('加载词典缓存失败:', error);
+                // 如果加载失败，清除损坏的数据
+                localStorage.removeItem('vocabHunterDict');
+            }
+            return false;
+        }
+
+        async function parseDictionary(text) {
+            dictionary.clear();
+            
+            if (text.charCodeAt(0) === 0xFEFF) {
+                text = text.slice(1);
+            }
+            
+            const lines = text.split('\n');
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                try {
+                    const parts = parseCSVLine(line);
+                    
+                    if (parts.length < 4) continue;
+                    
+                    let word = parts[0].toLowerCase().trim().replace(/^['"]/, '');
+                    const phonetic = parts[1].trim();
+                    let translation = parts[3].trim();
+                    
+                    translation = translation.replace(/\\n/g, ' ');
+                    
+                    const matches = translation.match(/[^\s]+\.\s*([^；;]+)/);
+                    if (matches && matches[1]) {
+                        translation = matches[1].trim();
+                    } else {
+                        const firstSentence = translation.split(/[；;\n]/)[0];
+                        if (firstSentence) {
+                            translation = firstSentence.replace(/^[a-z]+\.\s*/, '').trim();
+                        }
+                    }
+
+                    if (word && translation && translation.length > 0) {
+                        dictionary.set(word, {
+                            word: word,
+                            phonetic: phonetic || '',
+                            translation: translation
+                        });
+                    }
+                } catch (err) {
+                    // 忽略解析错误
+                }
+            }
+
+            if (dictionary.size === 0) {
+                throw new Error('未能解析任何词条，请检查文件格式');
+            }
+        }
+        // ==================== 单词列表加载 ====================
+        document.getElementById('wordInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (dictionary.size === 0) {
+                showMessage('importMessage', '请先加载词典文件！', 'error');
+                return;
+            }
+
+            showMessage('importMessage', '正在处理单词列表...', 'info');
+
+            try {
+                const text = await file.text();
+                await processWordList(text);
+                
+                // 保存原始单词列表
+                saveWordListToStorage();
+                
+                // 保存词典（只保存单词列表中需要的词条）
+                saveDictionaryToStorage();
+                
+                document.getElementById('wordInfo').textContent = 
+                    `✅ 已加载 ${wordList.length} 个单词`;
+                
+                showMessage('importMessage', `单词列表加载成功！共 ${wordList.length} 个单词<br>✅ 词典已智能缓存（仅保存需要的词条）`, 'success');
+                updateStorageStatus(); // 更新缓存状态显示
+                checkStartButton();
+            } catch (error) {
+                showMessage('importMessage', '单词列表加载失败：' + error.message, 'error');
+                console.error(error);
+            }
+        });
+        
+        // 保存单词列表到localStorage
+        function saveWordListToStorage() {
+            try {
+                // 只保存单词文本，不保存学习进度（学习进度在saveProgress中保存）
+                const wordTexts = wordList.map(w => w.word);
+                localStorage.setItem('vocabHunterWords', JSON.stringify(wordTexts));
+                console.log('单词列表已保存到本地存储');
+            } catch (error) {
+                console.error('保存单词列表失败:', error);
+            }
+        }
+        
+        // 从localStorage加载单词列表
+        function loadWordListFromStorage() {
+            try {
+                const saved = localStorage.getItem('vocabHunterWords');
+                if (saved && dictionary.size > 0) {
+                    const wordTexts = JSON.parse(saved);
+                    
+                    wordList = [];
+                    for (const word of wordTexts) {
+                        const dictEntry = dictionary.get(word);
+                        if (dictEntry) {
+                            wordList.push({
+                                word: word,
+                                phonetic: dictEntry.phonetic,
+                                translation: dictEntry.translation,
+                                consecutiveWrong: 0,
+                                consecutiveCorrect: 0,
+                                isStubborn: false,
+                                isMastered: false,
+                                lastWrong: false,
+                                isDifficult: false,
+                                dueDate: new Date(),
+                                reviewCount: 0
+                            });
+                        }
+                    }
+                    
+                    if (wordList.length > 0) {
+                        // 加载学习进度
+                        loadProgressFromStorage();
+                        
+                        document.getElementById('wordInfo').textContent = 
+                            `✅ 已加载 ${wordList.length} 个单词（缓存）`;
+                        checkStartButton();
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('加载单词列表缓存失败:', error);
+            }
+            return false;
+        }
+
+        // ==================== 打乱数组顺序 ====================
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        async function processWordList(text) {
+            const words = text.split('\n')
+                .map(w => w.trim().toLowerCase())
+                .filter(w => w.length > 0);
+
+            // 打乱单词顺序
+            const shuffledWords = shuffleArray(words);
+
+            wordList = [];
+            const notFound = [];
+
+            for (const word of shuffledWords) {
+                const dictEntry = dictionary.get(word);
+                
+                if (dictEntry) {
+                    wordList.push({
+                        word: word,
+                        phonetic: dictEntry.phonetic,
+                        translation: dictEntry.translation,
+                        consecutiveWrong: 0,
+                        consecutiveCorrect: 0,
+                        isStubborn: false,
+                        isMastered: false,
+                        lastWrong: false,
+                        isDifficult: false, // 新增：困难标记
+                        dueDate: new Date(),
+                        reviewCount: 0
+                    });
+                } else {
+                    notFound.push(word);
+                }
+            }
+
+            if (notFound.length > 0) {
+                console.warn('词典中未找到以下单词:', notFound);
+            }
+
+            if (wordList.length === 0) {
+                throw new Error('没有找到有效的单词');
+            }
+
+            loadProgressFromStorage();
+        }
+
+        function checkStartButton() {
+            const btn = document.getElementById('startBtn');
+            if (dictionary.size > 0 && wordList.length > 0) {
+                btn.disabled = false;
+            }
+        }
+        // ==================== 进度保存和加载 ====================
+        function saveProgress() {
+            const progressData = {
+                wordList: wordList,
+                correctAnswers: correctAnswers,
+                totalAnswered: totalAnswered,
+                timestamp: new Date().toISOString()
+            };
+            
+            localStorage.setItem('vocabHunterProgress', JSON.stringify(progressData));
+            updateStorageStatus(); // 更新缓存状态显示
+        }
+
+        function loadProgressFromStorage() {
+            try {
+                const saved = localStorage.getItem('vocabHunterProgress');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    
+                    // 合并进度数据
+                    if (data.wordList && Array.isArray(data.wordList)) {
+                        data.wordList.forEach(savedWord => {
+                            const word = wordList.find(w => w.word === savedWord.word);
+                            if (word) {
+                                word.consecutiveWrong = savedWord.consecutiveWrong || 0;
+                                word.consecutiveCorrect = savedWord.consecutiveCorrect || 0;
+                                word.isStubborn = savedWord.isStubborn || false;
+                                word.isMastered = savedWord.isMastered || false;
+                                word.lastWrong = savedWord.lastWrong || false;
+                                word.isDifficult = savedWord.isDifficult || false; // 新增
+                                word.dueDate = new Date(savedWord.dueDate);
+                                word.reviewCount = savedWord.reviewCount || 0;
+                            }
+                        });
+                    }
+                    
+                    correctAnswers = data.correctAnswers || 0;
+                    totalAnswered = data.totalAnswered || 0;
+                    
+                    console.log('已从本地存储加载进度');
+                }
+            } catch (error) {
+                console.error('加载本地进度失败:', error);
+            }
+        }
+
+        // ==================== 导出学习进度 ====================
+        function exportProgress() {
+            const progressData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                wordList: wordList,
+                correctAnswers: correctAnswers,
+                totalAnswered: totalAnswered,
+                stats: {
+                    total: wordList.length,
+                    mastered: wordList.filter(w => w.isMastered).length,
+                    stubborn: wordList.filter(w => w.isStubborn).length
+                }
+            };
+            
+            const json = JSON.stringify(progressData, null, 2);
+            const filename = `vocab_progress_${new Date().toISOString().split('T')[0]}.json`;
+            downloadFile(json, filename);
+            
+            showMessage('learningMessage', '✅ 学习进度已导出！', 'success');
+        }
+
+        // ==================== 导入学习进度 ====================
+        document.getElementById('progressInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                
+                if (!data.wordList || !Array.isArray(data.wordList)) {
+                    throw new Error('无效的进度文件格式');
+                }
+                
+                // 临时保存导入的进度
+                window.importedProgress = data;
+                
+                document.getElementById('progressInfo').textContent = 
+                    `✅ 已导入进度（${data.wordList.length}个单词）`;
+                showMessage('importMessage', '进度文件已加载，开始学习后将自动应用', 'success');
+                
+            } catch (error) {
+                showMessage('importMessage', '进度文件导入失败：' + error.message, 'error');
+                console.error(error);
+            }
+        });
+
+        function applyImportedProgress() {
+            if (!window.importedProgress) return;
+            
+            const data = window.importedProgress;
+            
+            data.wordList.forEach(savedWord => {
+                const word = wordList.find(w => w.word === savedWord.word);
+                if (word) {
+                    word.consecutiveWrong = savedWord.consecutiveWrong || 0;
+                    word.consecutiveCorrect = savedWord.consecutiveCorrect || 0;
+                    word.isStubborn = savedWord.isStubborn || false;
+                    word.isMastered = savedWord.isMastered || false;
+                    word.lastWrong = savedWord.lastWrong || false;
+                    word.isDifficult = savedWord.isDifficult || false; // 新增
+                    word.dueDate = new Date(savedWord.dueDate);
+                    word.reviewCount = savedWord.reviewCount || 0;
+                }
+            });
+            
+            correctAnswers = data.correctAnswers || 0;
+            totalAnswered = data.totalAnswered || 0;
+            
+            window.importedProgress = null;
+            showMessage('learningMessage', '✅ 已应用导入的学习进度', 'success');
+        }
+        // ==================== 页面切换 ====================
+        function startLearning() {
+            applyImportedProgress();
+            document.getElementById('importPage').classList.remove('active');
+            document.getElementById('learningPage').classList.add('active');
+            updateStats();
+            loadNextWord();
+        }
+
+        function backToImport() {
+            if (confirm('返回将暂停学习，进度已自动保存。确定返回吗？')) {
+                // 保存当前进度
+                saveProgress();
+                
+                document.getElementById('learningPage').classList.remove('active');
+                document.getElementById('importPage').classList.add('active');
+                stopTimer();
+                
+                // 清除自动加载计时器
+                if (autoLoadTimer) {
+                    clearTimeout(autoLoadTimer);
+                    autoLoadTimer = null;
+                }
+                
+                showMessage('importMessage', 
+                    '✅ 学习进度已保存！刷新页面或稍后回来可以继续学习', 
+                    'success', 5000);
+            }
+        }
+
+        // ==================== 统计更新 ====================
+        function updateStats() {
+            document.getElementById('totalWords').textContent = wordList.length;
+            
+            const now = new Date();
+            const dueCount = wordList.filter(w => 
+                !w.isMastered && new Date(w.dueDate) <= now
+            ).length;
+            document.getElementById('todayDue').textContent = dueCount;
+            
+            const masteredCount = wordList.filter(w => w.isMastered).length;
+            document.getElementById('masteredWords').textContent = masteredCount;
+            
+            const stubbornCount = wordList.filter(w => w.isStubborn).length;
+            document.getElementById('stubbornWords').textContent = stubbornCount;
+            
+            const accuracy = totalAnswered > 0 ? 
+                Math.round((correctAnswers / totalAnswered) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+
+            const progress = wordList.length > 0 ?
+                Math.round((masteredCount / wordList.length) * 100) : 0;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressFill').textContent = progress + '%';
+        }
+        // ==================== 加载下一个单词 ====================
+        let autoLoadTimer = null; // 新增：自动加载计时器
+        
+        function loadNextWord() {
+            // 清除之前的自动加载计时器
+            if (autoLoadTimer) {
+                clearTimeout(autoLoadTimer);
+                autoLoadTimer = null;
+            }
+            
+            const now = new Date();
+            
+            let dueWords;
+            
+            if (isInStubbornMode) {
+                // 顽固词模式：只显示顽固词
+                dueWords = wordList.filter(w => 
+                    w.isStubborn && !w.isMastered && new Date(w.dueDate) <= now
+                );
+                
+                if (dueWords.length === 0) {
+                    const allStubborn = wordList.filter(w => w.isStubborn && !w.isMastered);
+                    if (allStubborn.length === 0) {
+                        showMessage('learningMessage', '🎉 太棒了！没有顽固词了！', 'success');
+                        isInStubbornMode = false;
+                        document.getElementById('stubbornModeText').textContent = '进入顽固词模式';
+                        loadNextWord();
+                        return;
+                    } else {
+                        // 检查是否有即将到期的顽固词
+                        const nextStubborn = allStubborn
+                            .map(w => ({word: w, time: new Date(w.dueDate).getTime()}))
+                            .sort((a, b) => a.time - b.time)[0];
+                        
+                        if (nextStubborn) {
+                            waitForNextWord(nextStubborn.time);
+                            return;
+                        }
+                        
+                        showMessage('learningMessage', '✅ 当前顽固词已全部复习完！', 'success');
+                        stopTimer();
+                        return;
+                    }
+                }
+            } else {
+                // 正常模式：显示所有到期的词，但排除顽固词
+                dueWords = wordList.filter(w => 
+                    !w.isMastered && !w.isStubborn && new Date(w.dueDate) <= now
+                );
+                
+                if (dueWords.length === 0) {
+                    // 检查是否有即将到期的非顽固词
+                    const pendingWords = wordList.filter(w => !w.isMastered && !w.isStubborn);
+                    if (pendingWords.length > 0) {
+                        const nextWord = pendingWords
+                            .map(w => ({word: w, time: new Date(w.dueDate).getTime()}))
+                            .sort((a, b) => a.time - b.time)[0];
+                        
+                        waitForNextWord(nextWord.time);
+                        return;
+                    }
+                    
+                    showMessage('learningMessage', '🎉 今天的学习任务已完成！', 'success');
+                    stopTimer();
+                    return;
+                }
+            }
+
+            // 优先级排序：1. 复习词优先于新词 2. 按到期时间排序
+            dueWords.sort((a, b) => {
+                // 第一优先级：复习词优先于新词
+                const aIsReview = a.reviewCount > 0;
+                const bIsReview = b.reviewCount > 0;
+                if (aIsReview && !bIsReview) return -1;
+                if (!aIsReview && bIsReview) return 1;
+                
+                // 第二优先级：按到期时间排序（越早到期越优先）
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            });
+
+            currentWord = dueWords[0];
+            
+            // 加载新单词时禁用撤回（只能撤回最近一个）
+            canUndo = false;
+            const undoBtn = document.getElementById('undoBtn');
+            if (undoBtn) {
+                undoBtn.disabled = true;
+                undoBtn.classList.remove('enabled');
+            }
+            
+            displayWord();
+            startTimer();
+        }
+        
+        // ==================== 等待下一个单词 ====================
+        function waitForNextWord(nextDueTime) {
+            const now = Date.now();
+            const waitTime = nextDueTime - now;
+            
+            if (waitTime <= 0) {
+                loadNextWord();
+                return;
+            }
+            
+            // 显示倒计时
+            const waitSeconds = Math.ceil(waitTime / 1000);
+            document.getElementById('wordDisplay').textContent = '⏳ 等待中...';
+            document.getElementById('phoneticDisplay').textContent = '';
+            document.getElementById('optionsGrid').innerHTML = '';
+            
+            let countdown = waitSeconds;
+            showMessage('learningMessage', 
+                `⏳ 下一个单词将在 ${countdown} 秒后出现...`, 'info');
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    showMessage('learningMessage', 
+                        `⏳ 下一个单词将在 ${countdown} 秒后出现...`, 'info');
+                }
+            }, 1000);
+            
+            // 设置自动加载
+            autoLoadTimer = setTimeout(() => {
+                clearInterval(countdownInterval);
+                loadNextWord();
+            }, waitTime);
+        }
+        // ==================== 显示单词 ====================
+        let userChoice = null; // 记录用户的选择
+        let translationRevealed = false; // 记录是否已显示答案
+        
+        function displayWord() {
+            if (!currentWord) return;
+            
+            userChoice = null; // 重置选择
+            translationRevealed = false; // 重置显示状态
+
+            const displayText = currentWord.word + 
+                (currentWord.isStubborn ? ' 🔥' : '');
+            
+            document.getElementById('wordDisplay').textContent = displayText;
+            
+            // 显示音标，中文意思初始遮挡
+            correctAnswer = currentWord.translation.split(';')[0].split('；')[0];
+            document.getElementById('phoneticDisplay').innerHTML = 
+                (currentWord.phonetic ? currentWord.phonetic + '<br>' : '') + 
+                `<span id="translationSpan" class="translation-hidden">${correctAnswer}</span>`;
+            
+            // 新界面：只显示"认识"和"不认识"两个按钮
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+            optionsGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            
+            // "认识" 按钮
+            const knowBtn = document.createElement('button');
+            knowBtn.className = 'option-btn';
+            knowBtn.id = 'knowBtn';
+            knowBtn.textContent = '✅ 认识';
+            knowBtn.style.borderColor = '#28a745';
+            knowBtn.style.color = '#28a745';
+            knowBtn.onclick = () => selectChoice(true);
+            optionsGrid.appendChild(knowBtn);
+            
+            // "不认识" 按钮
+            const dontKnowBtn = document.createElement('button');
+            dontKnowBtn.className = 'option-btn';
+            dontKnowBtn.id = 'dontKnowBtn';
+            dontKnowBtn.textContent = '❌ 不认识';
+            dontKnowBtn.style.borderColor = '#dc3545';
+            dontKnowBtn.style.color = '#dc3545';
+            dontKnowBtn.onclick = () => selectChoice(false);
+            optionsGrid.appendChild(dontKnowBtn);
+
+            document.getElementById('learningMessage').innerHTML = '';
+        }
+        
+        // ==================== 选择按钮点击处理 ====================
+        function selectChoice(isKnow) {
+            // 显示答案
+            if (!translationRevealed) {
+                translationRevealed = true;
+                const translationSpan = document.getElementById('translationSpan');
+                translationSpan.className = 'translation-visible';
+            }
+            
+            // 记录选择
+            userChoice = isKnow;
+            
+            // 立即提交
+            submitAnswer();
+        }
+        
+        // ==================== 提交答案 ====================
+        function submitAnswer() {
+            if (userChoice === null) {
+                return;
+            }
+            
+            // 停止计时
+            stopTimer();
+            const elapsed = (Date.now() - startTime) / 1000;
+            
+            // 保存当前单词状态用于撤回（深拷贝）
+            lastWord = {
+                word: currentWord.word,
+                phonetic: currentWord.phonetic,
+                translation: currentWord.translation,
+                consecutiveWrong: currentWord.consecutiveWrong,
+                consecutiveCorrect: currentWord.consecutiveCorrect,
+                isStubborn: currentWord.isStubborn,
+                isMastered: currentWord.isMastered,
+                lastWrong: currentWord.lastWrong,
+                isDifficult: currentWord.isDifficult,
+                dueDate: new Date(currentWord.dueDate),
+                reviewCount: currentWord.reviewCount,
+                userChoice: userChoice,
+                elapsed: elapsed,
+                correctAnswersBefore: correctAnswers,
+                totalAnsweredBefore: totalAnswered
+            };
+            
+            const knowBtn = document.getElementById('knowBtn');
+            const dontKnowBtn = document.getElementById('dontKnowBtn');
+            
+            // 禁用按钮
+            knowBtn.onclick = null;
+            dontKnowBtn.onclick = null;
+            
+            totalAnswered++;
+
+            if (userChoice) {
+                // 认识 = 正确
+                knowBtn.classList.add('correct');
+                correctAnswers++;
+                
+                showMessage('learningMessage', 
+                    `✅ 很好！继续保持`, 'success', 0);
+                
+                handleCorrectAnswer(elapsed);
+            } else {
+                // 不认识 = 错误
+                dontKnowBtn.classList.add('wrong');
+                
+                showMessage('learningMessage', 
+                    `❌ 没关系，记住它！1分钟后再次出现`, 'error', 0);
+                
+                handleWrongAnswer();
+            }
+
+            saveProgress();
+            updateStats();
+            
+            // 启用撤回按钮
+            canUndo = true;
+            const undoBtn = document.getElementById('undoBtn');
+            undoBtn.disabled = false;
+            undoBtn.classList.add('enabled');
+
+            setTimeout(() => {
+                loadNextWord();
+            }, 2000);
+        }
+        
+        // ==================== 撤回上一个答案 ====================
+        function undoLastAnswer() {
+            if (!canUndo || !lastWord) {
+                return;
+            }
+            
+            // 停止当前单词的计时器
+            stopTimer();
+            
+            // 恢复单词状态
+            const wordToRestore = wordList.find(w => w.word === lastWord.word);
+            if (wordToRestore) {
+                wordToRestore.consecutiveWrong = lastWord.consecutiveWrong;
+                wordToRestore.consecutiveCorrect = lastWord.consecutiveCorrect;
+                wordToRestore.isStubborn = lastWord.isStubborn;
+                wordToRestore.isMastered = lastWord.isMastered;
+                wordToRestore.lastWrong = lastWord.lastWrong;
+                wordToRestore.isDifficult = lastWord.isDifficult;
+                wordToRestore.dueDate = new Date(lastWord.dueDate);
+                wordToRestore.reviewCount = lastWord.reviewCount;
+            }
+            
+            // 恢复统计
+            correctAnswers = lastWord.correctAnswersBefore;
+            totalAnswered = lastWord.totalAnsweredBefore;
+            
+            // 设置当前单词为上一个单词
+            currentWord = wordToRestore;
+            
+            // 禁用撤回按钮
+            canUndo = false;
+            lastWord = null;
+            const undoBtn = document.getElementById('undoBtn');
+            undoBtn.disabled = true;
+            undoBtn.classList.remove('enabled');
+            
+            // 保存进度
+            saveProgress();
+            updateStats();
+            
+            // 重新显示该单词
+            displayWord();
+            startTimer();
+            
+            showMessage('learningMessage', '↩️ 已撤回，请重新选择', 'info', 2000);
+        }
+
+        // ==================== 生成选项 ====================
+        function generateOptions(currentWord) {
+            const correct = currentWord.translation.split(';')[0].split('；')[0];
+            const options = [correct];
+
+            const allTranslations = Array.from(dictionary.values())
+                .filter(entry => entry.word !== currentWord.word)
+                .map(entry => entry.translation.split(';')[0].split('；')[0]);
+
+            const shuffled = allTranslations.sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < shuffled.length && options.length < 4; i++) {
+                if (!options.includes(shuffled[i])) {
+                    options.push(shuffled[i]);
+                }
+            }
+
+            while (options.length < 4) {
+                options.push('选项' + options.length);
+            }
+
+            return options.sort(() => Math.random() - 0.5);
+        }
+        // ==================== 正确答案处理 ====================
+        function handleCorrectAnswer(elapsed) {
+            currentWord.reviewCount++;
+            
+            // 情况1：上次错误，这次正确
+            if (currentWord.lastWrong) {
+                currentWord.lastWrong = false;
+                currentWord.consecutiveWrong = 0;
+                currentWord.isDifficult = true; // 标记为困难
+                currentWord.consecutiveCorrect = 0; // 重置连续正确计数
+                
+                // 6分钟后出现
+                currentWord.dueDate = new Date(Date.now() + 6 * 60 * 1000);
+                showMessage('learningMessage', '✅ 正确！标记为困难词，6分钟后复习', 'success');
+            }
+            // 情况2：困难词再次正确
+            else if (currentWord.isDifficult) {
+                currentWord.consecutiveCorrect++;
+                
+                if (elapsed <= 3) {
+                    // 简单：2天后
+                    currentWord.dueDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+                    showMessage('learningMessage', '✅ 正确！反应很快（简单），2天后复习', 'success');
+                } else {
+                    // 一般：1天后
+                    currentWord.dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                    showMessage('learningMessage', '✅ 正确！一般难度，1天后复习', 'success');
+                }
+                
+                currentWord.isDifficult = false; // 取消困难标记
+                
+                // 检查是否连续正确3次
+                if (currentWord.consecutiveCorrect >= 3) {
+                    currentWord.isMastered = true;
+                    currentWord.isStubborn = false;
+                    showMessage('learningMessage', '🎉 完全掌握！该词已进入掌握词库', 'success');
+                }
+            }
+            // 情况3：首次正确或连续正确
+            else {
+                currentWord.consecutiveCorrect++;
+                
+                if (elapsed <= 3) {
+                    // 简单：2天后
+                    currentWord.dueDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+                    showMessage('learningMessage', '✅ 正确！反应很快（简单），2天后复习', 'success');
+                } else {
+                    // 一般：1天后
+                    currentWord.dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                    showMessage('learningMessage', '✅ 正确！一般难度，1天后复习', 'success');
+                }
+                
+                // 检查是否连续正确3次
+                if (currentWord.consecutiveCorrect >= 3) {
+                    currentWord.isMastered = true;
+                    currentWord.isStubborn = false;
+                    showMessage('learningMessage', '🎉 完全掌握！该词已进入掌握词库', 'success');
+                }
+            }
+        }
+        // ==================== 错误答案处理 ====================
+        function handleWrongAnswer() {
+            currentWord.consecutiveWrong++;
+            currentWord.consecutiveCorrect = 0; // 重置连续正确计数
+            currentWord.lastWrong = true;
+            currentWord.isDifficult = false; // 取消困难标记
+            currentWord.reviewCount++;
+            
+            // 1分钟后重新出现
+            currentWord.dueDate = new Date(Date.now() + 1 * 60 * 1000);
+            
+            if (currentWord.consecutiveWrong >= 3) {
+                currentWord.isStubborn = true;
+                showMessage('learningMessage', '❌ 错误！连续错误3次，已加入顽固词列表 🔥', 'error');
+            } else {
+                showMessage('learningMessage', `❌ 错误！正确答案是：${correctAnswer}，1分钟后再次出现`, 'error');
+            }
+        }
+        // ==================== 计时器 ====================
+        function startTimer() {
+            startTime = Date.now();
+            const timerElement = document.getElementById('timer');
+            
+            timerInterval = setInterval(() => {
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                timerElement.textContent = `⏱️ 思考时间: ${elapsed}秒`;
+                
+                timerElement.classList.remove('warning', 'danger');
+                if (elapsed > 10) {
+                    timerElement.classList.add('danger');
+                } else if (elapsed > 5) {
+                    timerElement.classList.add('warning');
+                }
+            }, 100);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        // ==================== 发音功能 ====================
+        function pronounceWord() {
+            if (!currentWord) return;
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(currentWord.word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showMessage('learningMessage', '您的浏览器不支持语音功能', 'error');
+            }
+        }
+        // ==================== 导出未掌握词 ====================
+        function exportUnmastered() {
+            const unmastered = wordList.filter(w => !w.isMastered);
+            
+            if (unmastered.length === 0) {
+                showMessage('learningMessage', '恭喜！所有单词都已掌握！', 'success');
+                return;
+            }
+            
+            const content = unmastered.map(w => w.word).join('\n');
+            const filename = `unmastered_words_${new Date().toISOString().split('T')[0]}.txt`;
+            downloadFile(content, filename);
+            
+            showMessage('learningMessage', `✅ 已导出 ${unmastered.length} 个未掌握单词`, 'success');
+        }
+
+        // ==================== 导出顽固词 ====================
+        function exportStubborn() {
+            const stubborn = wordList.filter(w => w.isStubborn);
+            
+            if (stubborn.length === 0) {
+                showMessage('learningMessage', '太棒了！没有顽固词！', 'success');
+                return;
+            }
+            
+            const content = stubborn.map(w => w.word).join('\n');
+            const filename = `stubborn_words_${new Date().toISOString().split('T')[0]}.txt`;
+            downloadFile(content, filename);
+            
+            showMessage('learningMessage', `✅ 已导出 ${stubborn.length} 个顽固词`, 'success');
+        }
+
+        // ==================== 重置进度 ====================
+        function resetProgress() {
+            if (!confirm('确定要重置所有学习进度吗？此操作不可恢复！')) {
+                return;
+            }
+            
+            wordList.forEach(word => {
+                word.consecutiveWrong = 0;
+                word.consecutiveCorrect = 0;
+                word.isStubborn = false;
+                word.isMastered = false;
+                word.lastWrong = false;
+                word.isDifficult = false; // 新增
+                word.dueDate = new Date();
+                word.reviewCount = 0;
+            });
+            
+            correctAnswers = 0;
+            totalAnswered = 0;
+            
+            localStorage.removeItem('vocabHunterProgress');
+            
+            updateStats();
+            loadNextWord();
+            
+            showMessage('learningMessage', '✅ 学习进度已重置', 'info');
+        }
+        
+        // ==================== 清除所有数据 ====================
+        function clearAllData() {
+            if (!confirm('⚠️ 确定要清除所有数据吗？\n\n这将删除：\n- 词典缓存\n- 单词列表\n- 学习进度\n\n删除后需要重新导入词典和单词文件！')) {
+                return;
+            }
+            
+            // 清除所有localStorage数据
+            localStorage.removeItem('vocabHunterDict');
+            localStorage.removeItem('vocabHunterWords');
+            localStorage.removeItem('vocabHunterProgress');
+            
+            // 清除内存中的数据
+            dictionary.clear();
+            wordList = [];
+            correctAnswers = 0;
+            totalAnswered = 0;
+            
+            // 返回导入页面
+            document.getElementById('learningPage').classList.remove('active');
+            document.getElementById('importPage').classList.add('active');
+            
+            // 更新界面
+            document.getElementById('dictInfo').textContent = '未加载词典';
+            document.getElementById('wordInfo').textContent = '未选择文件';
+            document.getElementById('startBtn').disabled = true;
+            
+            // 更新缓存状态显示
+            updateStorageStatus();
+            
+            showMessage('importMessage', '✅ 所有数据已清除，请重新导入词典和单词文件', 'success');
+        }
+        // ==================== 顽固词模式 ====================
+        function toggleStubbornMode() {
+            isInStubbornMode = !isInStubbornMode;
+            const btnText = document.getElementById('stubbornModeText');
+            
+            // 清除自动加载计时器
+            if (autoLoadTimer) {
+                clearTimeout(autoLoadTimer);
+                autoLoadTimer = null;
+            }
+            
+            if (isInStubbornMode) {
+                btnText.textContent = '退出顽固词模式';
+                showMessage('learningMessage', '🔥 已进入顽固词模式，只显示顽固词', 'info');
+            } else {
+                btnText.textContent = '进入顽固词模式';
+                showMessage('learningMessage', '✅ 已退出顽固词模式', 'info');
+            }
+            
+            loadNextWord();
+        }
+        
+        // ==================== 检测localStorage可用性 ====================
+        function checkLocalStorageAvailable() {
+            try {
+                const test = '__storage_test__';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                return true;
+            } catch (e) {
+                console.error('localStorage不可用:', e);
+                return false;
+            }
+        }
+        
+        // ==================== 计算localStorage使用大小 ====================
+        function getStorageSize() {
+            let total = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    total += localStorage[key].length + key.length;
+                }
+            }
+            return (total / 1024).toFixed(2); // 返回KB
+        }
+        
+        // ==================== 更新缓存状态显示 ====================
+        function updateStorageStatus() {
+            const statusDiv = document.getElementById('storageStatus');
+            if (!statusDiv) return;
+            
+            const hasDict = localStorage.getItem('vocabHunterDict') !== null;
+            const hasWords = localStorage.getItem('vocabHunterWords') !== null;
+            const hasProgress = localStorage.getItem('vocabHunterProgress') !== null;
+            
+            let status = '';
+            status += hasDict ? '✅ 词典已缓存 ' : '❌ 无词典缓存 ';
+            status += hasWords ? '✅ 单词已缓存 ' : '❌ 无单词缓存 ';
+            status += hasProgress ? '✅ 进度已缓存' : '⚪ 无进度缓存';
+            
+            // 添加存储空间使用情况
+            const storageSize = getStorageSize();
+            status += `<br>📊 存储使用: ${storageSize} KB`;
+            
+            statusDiv.innerHTML = status;
+        }
+        
+        // ==================== 页面初始化 ====================
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载中，尝试恢复数据...');
+            
+            // 检查localStorage是否可用
+            if (!checkLocalStorageAvailable()) {
+                document.getElementById('storageStatus').innerHTML = 
+                    '❌ localStorage不可用（可能是隐私模式或被禁用）';
+                showMessage('importMessage', 
+                    '⚠️ 浏览器存储功能不可用（可能是隐私模式）<br>' +
+                    '数据无法自动保存，请使用"导出进度"功能手动保存', 
+                    'error', 0);
+                return;
+            }
+            
+            // 更新缓存状态显示
+            updateStorageStatus();
+            
+            // 调试信息：显示localStorage中的数据
+            console.log('localStorage keys:', Object.keys(localStorage));
+            console.log('vocabHunterDict存在:', localStorage.getItem('vocabHunterDict') !== null);
+            console.log('vocabHunterWords存在:', localStorage.getItem('vocabHunterWords') !== null);
+            console.log('vocabHunterProgress存在:', localStorage.getItem('vocabHunterProgress') !== null);
+            
+            // 先加载词典
+            const dictLoaded = loadDictionaryFromStorage();
+            console.log('词典加载结果:', dictLoaded, '词典大小:', dictionary.size);
+            
+            // 再加载单词列表
+            let wordsLoaded = false;
+            if (dictLoaded) {
+                wordsLoaded = loadWordListFromStorage();
+                console.log('单词列表加载结果:', wordsLoaded, '单词数量:', wordList.length);
+            }
+            
+            console.log(`最终状态 - 词典: ${dictionary.size} 条, 单词: ${wordList.length} 个`);
+            
+            // 如果数据都加载成功，显示提示并自动进入学习页面
+            if (dictLoaded && wordsLoaded && wordList.length > 0) {
+                showMessage('importMessage', 
+                    `✅ 已自动加载缓存数据！词典: ${dictionary.size}条，单词: ${wordList.length}个<br>` +
+                    `📚 3秒后自动开始学习...（或点击按钮立即开始）`, 
+                    'success', 0);
+                
+                // 3秒后自动进入学习页面
+                setTimeout(() => {
+                    if (document.getElementById('importPage').classList.contains('active')) {
+                        startLearning();
+                    }
+                }, 3000);
+            } else {
+                let reason = '';
+                if (!dictLoaded) reason = '(未找到词典缓存)';
+                else if (!wordsLoaded) reason = '(未找到单词列表缓存)';
+                
+                showMessage('importMessage', 
+                    `💡 首次使用或数据已清空，请导入词典和单词文件开始学习 ${reason}`, 
+                    'info', 0);
+            }
+        });
+        
+        // ==================== 页面关闭前保存数据 ====================
+        window.addEventListener('beforeunload', function(e) {
+            // 如果有学习数据，保存进度
+            if (wordList.length > 0) {
+                saveProgress();
+                console.log('页面关闭前已自动保存进度');
+            }
+        });
+        
+        // ==================== 定期自动保存 ====================
+        // 每30秒自动保存一次进度
+        setInterval(function() {
+            if (wordList.length > 0 && totalAnswered > 0) {
+                saveProgress();
+                console.log('自动保存进度');
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
